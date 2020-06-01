@@ -15,12 +15,22 @@ import loadingProgressBar from './global/loading-progress-bar';
 import svgInjector from './global/svg-injector';
 import objectFitImages from './global/object-fit-polyfill';
 
+import taskTwo from './tasks/task-two';
+
 export default class Global extends PageManager {
     onReady() {
         const {
-            channelId, cartId, productId, categoryId, secureBaseUrl, maintenanceModeSettings, adminBarLanguage, themeSettings,
+            channelId,
+            cartId,
+            productId,
+            categoryId,
+            secureBaseUrl,
+            maintenanceModeSettings,
+            adminBarLanguage,
+            themeSettings,
         } = this.context;
         cartPreview(secureBaseUrl, cartId);
+        taskTwo();
         quickSearch();
         currencySelector();
         foundation($(document));
@@ -30,7 +40,14 @@ export default class Global extends PageManager {
         mobileMenuToggle();
         privacyCookieNotification();
         if (themeSettings['show-admin-bar']) {
-            adminBar(secureBaseUrl, channelId, maintenanceModeSettings, JSON.parse(adminBarLanguage), productId, categoryId);
+            adminBar(
+                secureBaseUrl,
+                channelId,
+                maintenanceModeSettings,
+                JSON.parse(adminBarLanguage),
+                productId,
+                categoryId
+            );
         }
         loadingProgressBar();
         svgInjector();

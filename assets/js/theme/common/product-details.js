@@ -11,7 +11,9 @@ export default class ProductDetails {
         this.$overlay = $('[data-cart-item-add] .loadingOverlay');
         this.$scope = $scope;
         this.context = context;
-        this.imageGallery = new ImageGallery($('[data-image-gallery]', this.$scope));
+        this.imageGallery = new ImageGallery(
+            $('[data-image-gallery]', this.$scope)
+        );
         this.imageGallery.init();
         this.listenQuantityChange();
         this.initRadioAttributes();
@@ -21,32 +23,41 @@ export default class ProductDetails {
         const $form = $('form[data-cart-item-add]', $scope);
         const $productOptionsElement = $('[data-product-option-change]', $form);
         const hasOptions = $productOptionsElement.html().trim().length;
-        const hasDefaultOptions = $productOptionsElement.find('[data-default]').length;
+        const hasDefaultOptions = $productOptionsElement.find('[data-default]')
+            .length;
 
-        $productOptionsElement.on('change', event => {
+        $productOptionsElement.on('change', (event) => {
             this.productOptionsChanged(event);
             this.setProductVariant();
         });
 
-        $form.on('submit', event => {
+        $form.on('submit', (event) => {
             this.addProductToCart(event, $form[0]);
         });
 
         // Update product attributes. Also update the initial view in case items are oos
         // or have default variant properties that change the view
-        if ((_.isEmpty(productAttributesData) || hasDefaultOptions) && hasOptions) {
+        if (
+            (_.isEmpty(productAttributesData) || hasDefaultOptions) &&
+            hasOptions
+        ) {
             const $productId = $('[name="product_id"]', $form).val();
 
-            utils.api.productAttributes.optionChange($productId, $form.serialize(), 'products/bulk-discount-rates', (err, response) => {
-                const attributesData = response.data || {};
-                const attributesContent = response.content || {};
-                this.updateProductAttributes(attributesData);
-                if (hasDefaultOptions) {
-                    this.updateView(attributesData, attributesContent);
-                } else {
-                    this.updateDefaultAttributesForOOS(attributesData);
+            utils.api.productAttributes.optionChange(
+                $productId,
+                $form.serialize(),
+                'products/bulk-discount-rates',
+                (err, response) => {
+                    const attributesData = response.data || {};
+                    const attributesContent = response.content || {};
+                    this.updateProductAttributes(attributesData);
+                    if (hasDefaultOptions) {
+                        this.updateView(attributesData, attributesContent);
+                    } else {
+                        this.updateDefaultAttributesForOOS(attributesData);
+                    }
                 }
-            });
+            );
         } else {
             this.updateProductAttributes(productAttributesData);
         }
@@ -85,19 +96,35 @@ export default class ProductDetails {
             const required = optionLabel.toLowerCase().includes('required');
             const type = value.getAttribute('data-product-attribute');
 
-            if ((type === 'input-file' || type === 'input-text' || type === 'input-number') && value.querySelector('input').value === '' && required) {
+            if (
+                (type === 'input-file' ||
+                    type === 'input-text' ||
+                    type === 'input-number') &&
+                value.querySelector('input').value === '' &&
+                required
+            ) {
                 unsatisfiedRequiredFields.push(value);
             }
 
-            if (type === 'textarea' && value.querySelector('textarea').value === '' && required) {
+            if (
+                type === 'textarea' &&
+                value.querySelector('textarea').value === '' &&
+                required
+            ) {
                 unsatisfiedRequiredFields.push(value);
             }
 
             if (type === 'date') {
-                const isSatisfied = Array.from(value.querySelectorAll('select')).every((select) => select.selectedIndex !== 0);
+                const isSatisfied = Array.from(
+                    value.querySelectorAll('select')
+                ).every((select) => select.selectedIndex !== 0);
 
                 if (isSatisfied) {
-                    const dateString = Array.from(value.querySelectorAll('select')).map((x) => x.value).join('-');
+                    const dateString = Array.from(
+                        value.querySelectorAll('select')
+                    )
+                        .map((x) => x.value)
+                        .join('-');
                     options.push(`${optionTitle}:${dateString}`);
 
                     return;
@@ -113,7 +140,9 @@ export default class ProductDetails {
                 const selectedIndex = select.selectedIndex;
 
                 if (selectedIndex !== 0) {
-                    options.push(`${optionTitle}:${select.options[selectedIndex].innerText}`);
+                    options.push(
+                        `${optionTitle}:${select.options[selectedIndex].innerText}`
+                    );
 
                     return;
                 }
@@ -123,10 +152,20 @@ export default class ProductDetails {
                 }
             }
 
-            if (type === 'set-rectangle' || type === 'set-radio' || type === 'swatch' || type === 'input-checkbox' || type === 'product-list') {
+            if (
+                type === 'set-rectangle' ||
+                type === 'set-radio' ||
+                type === 'swatch' ||
+                type === 'input-checkbox' ||
+                type === 'product-list'
+            ) {
                 const checked = value.querySelector(':checked');
                 if (checked) {
-                    if (type === 'set-rectangle' || type === 'set-radio' || type === 'product-list') {
+                    if (
+                        type === 'set-rectangle' ||
+                        type === 'set-radio' ||
+                        type === 'product-list'
+                    ) {
                         const label = checked.labels[0].innerText;
                         if (label) {
                             options.push(`${optionTitle}:${label}`);
@@ -157,15 +196,20 @@ export default class ProductDetails {
             }
         });
 
-        let productVariant = unsatisfiedRequiredFields.length === 0 ? options.sort().join(', ') : 'unsatisfied';
+        let productVariant =
+            unsatisfiedRequiredFields.length === 0
+                ? options.sort().join(', ')
+                : 'unsatisfied';
         const view = $('.productView');
 
         if (productVariant) {
-            productVariant = productVariant === 'unsatisfied' ? '' : productVariant;
+            productVariant =
+                productVariant === 'unsatisfied' ? '' : productVariant;
             if (view.attr('data-event-type')) {
                 view.attr('data-product-variant', productVariant);
             } else {
-                const productName = view.find('.productView-title')[0].innerText;
+                const productName = view.find('.productView-title')[0]
+                    .innerText;
                 const card = $(`[data-name="${productName}"]`);
                 card.attr('data-product-variant', productVariant);
             }
@@ -211,7 +255,10 @@ export default class ProductDetails {
             $weight: $('.productView-info [data-product-weight]', $scope),
             $increments: $('.form-field--increments :input', $scope),
             $addToCart: $('#form-action-addToCart', $scope),
-            $wishlistVariation: $('[data-wishlist-add] [name="variation_id"]', $scope),
+            $wishlistVariation: $(
+                '[data-wishlist-add] [name="variation_id"]',
+                $scope
+            ),
             stock: {
                 $container: $('.form-field--stock', $scope),
                 $input: $('[data-product-stock]', $scope),
@@ -255,23 +302,34 @@ export default class ProductDetails {
         const productId = $('[name="product_id"]', $form).val();
 
         // Do not trigger an ajax request if it's a file or if the browser doesn't support FormData
-        if ($changedOption.attr('type') === 'file' || window.FormData === undefined) {
+        if (
+            $changedOption.attr('type') === 'file' ||
+            window.FormData === undefined
+        ) {
             return;
         }
 
-        utils.api.productAttributes.optionChange(productId, $form.serialize(), 'products/bulk-discount-rates', (err, response) => {
-            const productAttributesData = response.data || {};
-            const productAttributesContent = response.content || {};
-            this.updateProductAttributes(productAttributesData);
-            this.updateView(productAttributesData, productAttributesContent);
-        });
+        utils.api.productAttributes.optionChange(
+            productId,
+            $form.serialize(),
+            'products/bulk-discount-rates',
+            (err, response) => {
+                const productAttributesData = response.data || {};
+                const productAttributesContent = response.content || {};
+                this.updateProductAttributes(productAttributesData);
+                this.updateView(
+                    productAttributesData,
+                    productAttributesContent
+                );
+            }
+        );
     }
 
     showProductImage(image) {
         if (_.isPlainObject(image)) {
             const zoomImageUrl = utils.tools.imageSrcset.getSrcset(
                 image.data,
-                { '1x': this.context.themeSettings.zoom_size },
+                { '1x': this.context.themeSettings.zoom_size }
                 /*
                     Should match zoom size used for data-zoom-image in
                     components/products/product-view.html
@@ -284,7 +342,7 @@ export default class ProductDetails {
 
             const mainImageUrl = utils.tools.imageSrcset.getSrcset(
                 image.data,
-                { '1x': this.context.themeSettings.product_size },
+                { '1x': this.context.themeSettings.product_size }
                 /*
                     Should match fallback image size used for the main product image in
                     components/products/product-view.html
@@ -295,7 +353,9 @@ export default class ProductDetails {
                 */
             );
 
-            const mainImageSrcset = utils.tools.imageSrcset.getSrcset(image.data);
+            const mainImageSrcset = utils.tools.imageSrcset.getSrcset(
+                image.data
+            );
 
             this.imageGallery.setAlternateImage({
                 mainImageUrl,
@@ -313,7 +373,7 @@ export default class ProductDetails {
      *
      */
     listenQuantityChange() {
-        this.$scope.on('click', '[data-quantity-change] button', event => {
+        this.$scope.on('click', '[data-quantity-change] button', (event) => {
             event.preventDefault();
             const $target = $(event.currentTarget);
             const viewModel = this.getViewModel(this.$scope);
@@ -328,7 +388,7 @@ export default class ProductDetails {
                 // If quantity max option is set
                 if (quantityMax > 0) {
                     // Check quantity does not exceed max
-                    if ((qty + 1) <= quantityMax) {
+                    if (qty + 1 <= quantityMax) {
                         qty++;
                     }
                 } else {
@@ -338,7 +398,7 @@ export default class ProductDetails {
                 // If quantity min option is set
                 if (quantityMin > 0) {
                     // Check quantity does not fall below min
-                    if ((qty - 1) >= quantityMin) {
+                    if (qty - 1 >= quantityMin) {
                         qty--;
                     }
                 } else {
@@ -353,7 +413,7 @@ export default class ProductDetails {
         });
 
         // Prevent triggering quantity change when pressing enter
-        this.$scope.on('keypress', '.form-input--incrementTotal', event => {
+        this.$scope.on('keypress', '.form-input--incrementTotal', (event) => {
             // If the browser supports event.which, then use event.which, otherwise use event.keyCode
             const x = event.which || event.keyCode;
             if (x === 13) {
@@ -381,42 +441,47 @@ export default class ProductDetails {
         // Prevent default
         event.preventDefault();
 
-        $addToCartBtn
-            .val(waitMessage)
-            .prop('disabled', true);
+        $addToCartBtn.val(waitMessage).prop('disabled', true);
 
         this.$overlay.show();
 
         // Add item to cart
-        utils.api.cart.itemAdd(this.filterEmptyFilesFromForm(new FormData(form)), (err, response) => {
-            const errorMessage = err || response.data.error;
+        utils.api.cart.itemAdd(
+            this.filterEmptyFilesFromForm(new FormData(form)),
+            (err, response) => {
+                const errorMessage = err || response.data.error;
 
-            $addToCartBtn
-                .val(originalBtnVal)
-                .prop('disabled', false);
+                $addToCartBtn.val(originalBtnVal).prop('disabled', false);
 
-            this.$overlay.hide();
+                this.$overlay.hide();
 
-            // Guard statement
-            if (errorMessage) {
-                // Strip the HTML from the error message
-                const tmp = document.createElement('DIV');
-                tmp.innerHTML = errorMessage;
+                // Guard statement
+                if (errorMessage) {
+                    // Strip the HTML from the error message
+                    const tmp = document.createElement('DIV');
+                    tmp.innerHTML = errorMessage;
 
-                return showAlertModal(tmp.textContent || tmp.innerText);
+                    return showAlertModal(tmp.textContent || tmp.innerText);
+                }
+
+                // Open preview modal and update content
+                if (this.previewModal) {
+                    this.previewModal.open();
+
+                    this.updateCartContent(
+                        this.previewModal,
+                        response.data.cart_item.id
+                    );
+                } else {
+                    this.$overlay.show();
+                    // if no modal, redirect to the cart page
+                    this.redirectTo(
+                        response.data.cart_item.cart_url ||
+                            this.context.urls.cart
+                    );
+                }
             }
-
-            // Open preview modal and update content
-            if (this.previewModal) {
-                this.previewModal.open();
-
-                this.updateCartContent(this.previewModal, response.data.cart_item.id);
-            } else {
-                this.$overlay.show();
-                // if no modal, redirect to the cart page
-                this.redirectTo(response.data.cart_item.cart_url || this.context.urls.cart);
-            }
-        });
+        );
     }
 
     /**
@@ -552,14 +617,18 @@ export default class ProductDetails {
             viewModel.priceLabel.$span.hide();
             viewModel.nonSaleWithTax.$div.show();
             viewModel.priceNowLabel.$span.show();
-            viewModel.nonSaleWithTax.$span.html(price.non_sale_price_with_tax.formatted);
+            viewModel.nonSaleWithTax.$span.html(
+                price.non_sale_price_with_tax.formatted
+            );
         }
 
         if (price.non_sale_price_without_tax) {
             viewModel.priceLabel.$span.hide();
             viewModel.nonSaleWithoutTax.$div.show();
             viewModel.priceNowLabel.$span.show();
-            viewModel.nonSaleWithoutTax.$span.html(price.non_sale_price_without_tax.formatted);
+            viewModel.nonSaleWithoutTax.$span.html(
+                price.non_sale_price_without_tax.formatted
+            );
         }
     }
 
@@ -619,7 +688,7 @@ export default class ProductDetails {
         // If Bulk Pricing rendered HTML is available
         if (data.bulk_discount_rates && content) {
             viewModel.$bulkPricing.html(content);
-        } else if (typeof (data.bulk_discount_rates) !== 'undefined') {
+        } else if (typeof data.bulk_discount_rates !== 'undefined') {
             viewModel.$bulkPricing.html('');
         }
     }
@@ -650,22 +719,38 @@ export default class ProductDetails {
             return;
         }
 
-        $('[data-product-attribute-value]', this.$scope).each((i, attribute) => {
-            const $attribute = $(attribute);
-            const attrId = parseInt($attribute.data('productAttributeValue'), 10);
+        $('[data-product-attribute-value]', this.$scope).each(
+            (i, attribute) => {
+                const $attribute = $(attribute);
+                const attrId = parseInt(
+                    $attribute.data('productAttributeValue'),
+                    10
+                );
 
-
-            if (inStockIds.indexOf(attrId) !== -1) {
-                this.enableAttribute($attribute, behavior, outOfStockMessage);
-            } else {
-                this.disableAttribute($attribute, behavior, outOfStockMessage);
+                if (inStockIds.indexOf(attrId) !== -1) {
+                    this.enableAttribute(
+                        $attribute,
+                        behavior,
+                        outOfStockMessage
+                    );
+                } else {
+                    this.disableAttribute(
+                        $attribute,
+                        behavior,
+                        outOfStockMessage
+                    );
+                }
             }
-        });
+        );
     }
 
     disableAttribute($attribute, behavior, outOfStockMessage) {
         if (this.getAttributeType($attribute) === 'set-select') {
-            return this.disableSelectOptionAttribute($attribute, behavior, outOfStockMessage);
+            return this.disableSelectOptionAttribute(
+                $attribute,
+                behavior,
+                outOfStockMessage
+            );
         }
 
         if (behavior === 'hide_option') {
@@ -686,13 +771,20 @@ export default class ProductDetails {
             }
         } else {
             $attribute.attr('disabled', 'disabled');
-            $attribute.html($attribute.html().replace(outOfStockMessage, '') + outOfStockMessage);
+            $attribute.html(
+                $attribute.html().replace(outOfStockMessage, '') +
+                    outOfStockMessage
+            );
         }
     }
 
     enableAttribute($attribute, behavior, outOfStockMessage) {
         if (this.getAttributeType($attribute) === 'set-select') {
-            return this.enableSelectOptionAttribute($attribute, behavior, outOfStockMessage);
+            return this.enableSelectOptionAttribute(
+                $attribute,
+                behavior,
+                outOfStockMessage
+            );
         }
 
         if (behavior === 'hide_option') {
@@ -721,44 +813,53 @@ export default class ProductDetails {
      * Allow radio buttons to get deselected
      */
     initRadioAttributes() {
-        $('[data-product-attribute] input[type="radio"]', this.$scope).each((i, radio) => {
-            const $radio = $(radio);
+        $('[data-product-attribute] input[type="radio"]', this.$scope).each(
+            (i, radio) => {
+                const $radio = $(radio);
 
-            // Only bind to click once
-            if ($radio.attr('data-state') !== undefined) {
-                $radio.on('click', () => {
-                    if ($radio.data('state') === true) {
-                        $radio.prop('checked', false);
-                        $radio.data('state', false);
+                // Only bind to click once
+                if ($radio.attr('data-state') !== undefined) {
+                    $radio.on('click', () => {
+                        if ($radio.data('state') === true) {
+                            $radio.prop('checked', false);
+                            $radio.data('state', false);
 
-                        $radio.trigger('change');
-                    } else {
-                        $radio.data('state', true);
-                    }
+                            $radio.trigger('change');
+                        } else {
+                            $radio.data('state', true);
+                        }
 
-                    this.initRadioAttributes();
-                });
+                        this.initRadioAttributes();
+                    });
+                }
+
+                $radio.attr('data-state', $radio.prop('checked'));
             }
-
-            $radio.attr('data-state', $radio.prop('checked'));
-        });
+        );
     }
 
     /**
      * Check for fragment identifier in URL requesting a specific tab
      */
     getTabRequests() {
-        if (window.location.hash && window.location.hash.indexOf('#tab-') === 0) {
-            const $activeTab = $('.tabs').has(`[href='${window.location.hash}']`);
+        if (
+            window.location.hash &&
+            window.location.hash.indexOf('#tab-') === 0
+        ) {
+            const $activeTab = $('.tabs').has(
+                `[href='${window.location.hash}']`
+            );
             const $tabContent = $(`${window.location.hash}`);
 
             if ($activeTab.length > 0) {
-                $activeTab.find('.tab')
+                $activeTab
+                    .find('.tab')
                     .removeClass('is-active')
                     .has(`[href='${window.location.hash}']`)
                     .addClass('is-active');
 
-                $tabContent.addClass('is-active')
+                $tabContent
+                    .addClass('is-active')
                     .siblings()
                     .removeClass('is-active');
             }
