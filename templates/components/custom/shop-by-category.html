@@ -1,0 +1,16 @@
+<div class="sidebarBlock">
+    <h5 class="sidebarBlock-heading">{{lang 'category.shop_by_category'}}</h5>
+    <ul class="navList">
+        {{#each categories}}
+        <li class="navList-item">
+            <a
+                class="navList-action {{#if selected }} is-active {{/if}}"
+                href="{{url}}"
+                alt="{{name}}"
+                title="{{name}}"
+                >{{name}}</a
+            >
+        </li>
+        {{/each}}
+    </ul>
+</div>
